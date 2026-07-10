@@ -17,7 +17,7 @@ The runner writes JSON with:
 - `errors`: a concise diagnostic or `null`
 - `session_id`: Claude session id when returned
 
-Accept `success` only when Claude exits zero, its outer JSON parses, `structured_output` exists, and semantic invariants hold:
+Accept `success` only when Claude exits successfully, its outer JSON parses, and the review object is available either as `structured_output` or as a JSON string in `result`. Apply these semantic invariants:
 
 - `approved` has no findings;
 - `revise` has at least one finding;
@@ -26,11 +26,10 @@ Accept `success` only when Claude exits zero, its outer JSON parses, `structured
 
 ## Self-test
 
-1. Check `git`, `claude`, the platform runner, schema, prompt, and a writable temp directory.
-2. Run `claude --version` only; do not send repository content.
-3. Run the repository stress-test script with its mock Claude command.
-4. Optionally dispatch a synthetic bundle containing no repository content after user approval. Confirm structured parsing and snapshot stability.
-5. Report authentication or CLI absence as setup needed.
+1. Run `scripts/selftest.ps1` or `scripts/selftest.sh`.
+2. Confirm `git`, Claude CLI discovery, Claude version, authentication status, required runner resources, mock parsing, and writable temp behavior.
+3. Optionally dispatch a synthetic bundle containing no repository content with `-LiveProbe` or `--live-probe` after user approval. Confirm structured parsing and snapshot stability.
+4. Report authentication or CLI absence as setup needed.
 
 ## Failure policy
 

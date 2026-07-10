@@ -7,7 +7,6 @@ MODEL=${3:-}
 MAX_TURNS=${CLAUDE_REVIEW_MAX_TURNS:-8}
 MAX_BUDGET_USD=${CLAUDE_REVIEW_MAX_BUDGET_USD:-3.00}
 TIMEOUT_SECONDS=${CLAUDE_REVIEW_TIMEOUT_SECONDS:-600}
-CLAUDE_BIN=${CLAUDE_BIN:-claude}
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 SKILL_DIR=$(cd -- "$SCRIPT_DIR/.." && pwd)
 SCHEMA_PATH="$SKILL_DIR/references/review-schema.json"
@@ -32,7 +31,17 @@ BUNDLE_PATH=$(cd -- "$(dirname -- "$BUNDLE_PATH")" && pwd)/$(basename -- "$BUNDL
 result_dir=$(dirname -- "$RESULT_PATH")
 mkdir -p -- "$result_dir"
 RESULT_PATH=$(cd -- "$result_dir" && pwd)/$(basename -- "$RESULT_PATH")
-if [[ ! -s "$SCHEMA_PATH" || ! -s "$PROMPT_PATH" ]] || ! command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
+resolve_claude_bin() {
+  for candidate in "${CLAUDE_REVIEW_CLI:-}" "${CLAUDE_BIN:-}" claude "$HOME/.local/bin/claude" "$HOME/.npm-global/bin/claude"; do
+    [[ -n "$candidate" ]] || continue
+    if [[ -x "$candidate" ]]; then printf '%s\n' "$candidate"; return 0; fi
+    if command -v "$candidate" >/dev/null 2>&1; then command -v "$candidate"; return 0; fi
+  done
+  return 1
+}
+
+CLAUDE_COMMAND=$(resolve_claude_bin || true)
+if [[ ! -s "$SCHEMA_PATH" || ! -s "$PROMPT_PATH" || -z "$CLAUDE_COMMAND" ]]; then
   write_error setup_needed degraded_environmental "Claude CLI or required skill resources are unavailable."
   exit 2
 fi
@@ -42,25 +51,27 @@ stdout=$(mktemp)
 stderr=$(mktemp)
 review_cwd=$(mktemp -d)
 trap 'rm -f -- "$stdout" "$stderr"; rm -rf -- "$review_cwd"' EXIT
-args=(-p --permission-mode dontAsk --tools "" --disable-slash-commands --setting-sources "" --strict-mcp-config --mcp-config '{}' --settings '{"disableAllHooks":true,"autoMemoryEnabled":false}' --output-format json --json-schema "$(<"$SCHEMA_PATH")" --system-prompt-file "$PROMPT_PATH" --max-turns "$MAX_TURNS" --max-budget-usd "$MAX_BUDGET_USD" --no-session-persistence)
+args=(-p --permission-mode dontAsk --tools "" --disable-slash-commands --setting-sources "" --strict-mcp-config --mcp-config '{"mcpServers":{}}' --settings '{"disableAllHooks":true,"autoMemoryEnabled":false}' --output-format json --json-schema "$(<"$SCHEMA_PATH")" --system-prompt-file "$PROMPT_PATH" --max-turns "$MAX_TURNS" --max-budget-usd "$MAX_BUDGET_USD" --no-session-persistence)
 [[ -n "$MODEL" ]] && args+=(--model "$MODEL")
 set +e
-(cd -- "$review_cwd" && timeout "$TIMEOUT_SECONDS" "$CLAUDE_BIN" "${args[@]}" < "$BUNDLE_PATH" > "$stdout" 2> "$stderr")
+(cd -- "$review_cwd" && timeout "$TIMEOUT_SECONDS" "$CLAUDE_COMMAND" "${args[@]}" < "$BUNDLE_PATH" > "$stdout" 2> "$stderr")
 code=$?
 set -e
 if [[ $code -ne 0 ]]; then
-  [[ $code -eq 124 ]] && write_error timeout degraded_environmental "Claude review timed out." || write_error launch_failure degraded_environmental "$(head -c 1000 "$stderr")"
+  diagnostic=$(head -c 1000 "$stderr")
+  [[ -n "$diagnostic" ]] || diagnostic=$(head -c 1000 "$stdout")
+  [[ $code -eq 124 ]] && write_error timeout degraded_environmental "Claude review timed out." || write_error launch_failure degraded_environmental "Claude exited with code $code. $diagnostic"
   exit 3
 fi
-if ! jq -e '.structured_output.verdict and .structured_output.review_quality and (.structured_output.findings | type == "array")' "$stdout" >/dev/null 2>&1; then
+if ! jq -e '(.structured_output // (.result | fromjson?)) as $r | $r.verdict and $r.review_quality and ($r.findings | type == "array")' "$stdout" >/dev/null 2>&1; then
   write_error invalid_output unknown "Claude returned malformed or incomplete structured output."
   exit 4
 fi
-verdict=$(jq -r '.structured_output.verdict' "$stdout")
-count=$(jq '.structured_output.findings | length' "$stdout")
+verdict=$(jq -r '(.structured_output // (.result | fromjson?)).verdict' "$stdout")
+count=$(jq '(.structured_output // (.result | fromjson?)).findings | length' "$stdout")
 if [[ ( "$verdict" == approved && "$count" -ne 0 ) || ( "$verdict" == revise && "$count" -eq 0 ) ]]; then
   write_error invalid_output unknown "Verdict and finding count are inconsistent."
   exit 4
 fi
 mkdir -p -- "$(dirname -- "$RESULT_PATH")"
-jq '{result:"success", verdict:.structured_output.verdict, review_quality:.structured_output.review_quality, review:.structured_output, errors:null, session_id:(.session_id // null)}' "$stdout" > "$RESULT_PATH"
+jq '(.structured_output // (.result | fromjson?)) as $r | {result:"success", verdict:$r.verdict, review_quality:$r.review_quality, review:$r, errors:null, session_id:(.session_id // null)}' "$stdout" > "$RESULT_PATH"

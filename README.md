@@ -34,6 +34,8 @@ Prerequisites:
 - Claude Code CLI, installed and authenticated
 - PowerShell 5.1+ on Windows, or Bash plus `jq` and `timeout` on macOS/Linux/WSL
 
+The runners find Claude through `CLAUDE_REVIEW_CLI`, `CLAUDE_BIN`, `claude` on `PATH`, common local install paths, and on Windows the VS Code Claude extension's native binary.
+
 Clone and install:
 
 ```powershell
@@ -57,6 +59,18 @@ Use $claude-adversarial-reviewer to audit this change.
 Use $claude-adversarial-reviewer in plan mode.
 Use $claude-adversarial-reviewer for a feasibility review.
 Use $claude-adversarial-reviewer selftest.
+```
+
+Direct dependency check:
+
+```powershell
+.\skills\claude-adversarial-reviewer\scripts\selftest.ps1
+.\skills\claude-adversarial-reviewer\scripts\selftest.ps1 -LiveProbe
+```
+
+```bash
+bash skills/claude-adversarial-reviewer/scripts/selftest.sh
+bash skills/claude-adversarial-reviewer/scripts/selftest.sh --live-probe
 ```
 
 Run it after non-trivial changes, auth or data work, migrations, billing changes, multi-file refactors, architecture decisions, or claims whose verification feels thin. Skip it for typo-only or cosmetic edits.
