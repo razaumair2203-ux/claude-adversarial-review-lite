@@ -138,6 +138,11 @@ try {
     Write-Envelope @{ result="invalid_output"; verdict=$review.verdict; review_quality=$review.review_quality; review=$review; errors="Verdict and finding count are inconsistent."; session_id=$outer.session_id }
     exit 4
   }
+  $rubricFails = @($review.rubric_results | Where-Object { $_.result -eq "FAIL" }).Count
+  if ($review.verdict -eq "approved" -and $rubricFails -ne 0) {
+    Write-Envelope @{ result="invalid_output"; verdict=$review.verdict; review_quality=$review.review_quality; review=$review; errors="Verdict is approved but the rubric contains FAIL results."; session_id=$outer.session_id }
+    exit 4
+  }
   Write-Envelope @{ result="success"; verdict=$review.verdict; review_quality=$review.review_quality; review=$review; errors=$null; session_id=$outer.session_id }
 } finally {
   Remove-Item -LiteralPath $stdout,$stderr -Force -ErrorAction SilentlyContinue

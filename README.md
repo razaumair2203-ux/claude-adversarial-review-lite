@@ -4,7 +4,7 @@ Codex builds. Claude reviews. You decide.
 
 Claude Adversarial Reviewer is a Codex skill for independent, audit-first review through Claude Code CLI. It freezes a focused review bundle, invokes Claude non-interactively with read-only permissions and schema-constrained output, detects repository mutation, and requires Codex to validate findings before fixes.
 
-It is the reversed companion to [Adversarial Reviewer Lite](https://github.com/razaumair2203-ux/adversarial-reviewer-lite), with a smaller runtime contract:
+It is the reversed companion to [Adversarial Reviewer Lite](https://github.com/razaumair2203-ux/adversarial-reviewer-lite). The two are deliberately kept as mirror siblings: the same policy layer (human-review floor, rubric checklists, strict mode) and the same reporting procedure (finding evaluation, audit report, HTML report structure, terminal operator summary) — differing only in direction and transport. Here Codex builds and Claude reviews through schema-constrained JSON; there Claude Code builds and Codex reviews through a markdown verdict contract:
 
 - frozen bundle by default instead of reviewer repository access;
 - JSON Schema output instead of textual verdict parsing;
@@ -58,8 +58,12 @@ Restart Codex if it is already open.
 Use $claude-adversarial-reviewer to audit this change.
 Use $claude-adversarial-reviewer in plan mode.
 Use $claude-adversarial-reviewer for a feasibility review.
+Use $claude-adversarial-reviewer to audit this change with rubric:docs/compliance-checklist.md.
+Use $claude-adversarial-reviewer strict rubric:docs/compliance-checklist.md.
 Use $claude-adversarial-reviewer selftest.
 ```
+
+`rubric:<path>` makes the review checkable against named domain rules: the reviewer returns PASS/FAIL/UNVERIFIABLE per checklist item with evidence, and any FAIL forces `revise`. `strict` is the one-flag safe configuration for high-consequence repos: it requires a rubric, floor-gates every change for human review, and disables autonomous fixing.
 
 Direct dependency check:
 
@@ -83,7 +87,8 @@ Run it after non-trivial changes, auth or data work, migrations, billing changes
 - Claude runs with `dontAsk`; unapproved operations fail instead of prompting invisibly.
 - Pre/post snapshots include Git state and hashes of dirty tracked files.
 - Neither Claude nor Codex is automatically trusted.
-- No fix is applied until reviewer findings are independently assessed and the user signs off, unless autonomous fixing was explicitly requested.
+- No fix is applied until reviewer findings are independently assessed and the user signs off, unless autonomous fixing was explicitly requested (strict mode voids that authorization).
+- An `approved` verdict on auth, billing, migration/destructive-data, secret, or regulatory changes is floor-gated: you review the diff yourself before the audit completes. Tag repo-specific floor paths in a `.advreview-floor` file (one regex per line) at the repo root.
 
 For sensitive repositories, inspect the bundle before dispatch and commit or stash unrelated work first.
 

@@ -34,6 +34,15 @@ set -e
 jq -e '.result == "invalid_output"' "$tmp/inconsistent.json" >/dev/null
 echo "PASS inconsistent"
 
+export MOCK_CLAUDE_OUTPUT="$root/tests/fixtures/rubric-fail-approved.json"
+set +e
+bash "$runner" "$bundle" "$tmp/rubric-fail-approved.json"
+code=$?
+set -e
+[[ $code -eq 4 ]]
+jq -e '.result == "invalid_output"' "$tmp/rubric-fail-approved.json" >/dev/null
+echo "PASS rubric-fail-approved"
+
 export CLAUDE_BIN="$root/tests/mock/claude-sleep"
 export CLAUDE_REVIEW_TIMEOUT_SECONDS=1
 set +e
@@ -53,4 +62,4 @@ set -e
 [[ $code -eq 3 ]]
 jq -e '.result == "launch_failure" and (.errors | contains("C:\\temp\\q"))' "$tmp/error.json" >/dev/null
 echo "PASS escaped-error"
-echo "POSIX stress suite passed: 6/6"
+echo "POSIX stress suite passed: 7/7"

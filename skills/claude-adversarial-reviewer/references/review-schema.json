@@ -22,6 +22,19 @@
         }
       }
     },
-    "remaining_risks": { "type": "array", "items": { "type": "string" } }
+    "remaining_risks": { "type": "array", "items": { "type": "string" } },
+    "rubric_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "result", "evidence"],
+        "properties": {
+          "item": { "type": "string", "minLength": 1 },
+          "result": { "type": "string", "enum": ["PASS", "FAIL", "UNVERIFIABLE"] },
+          "evidence": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
   }
 }

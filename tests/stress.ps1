@@ -15,6 +15,7 @@ try {
     @{ name="approved-result-string"; fixture="approved-result-string.json"; exit="0"; expected="success"; code=0 },
     @{ name="revise"; fixture="revise.json"; exit="0"; expected="success"; code=0 },
     @{ name="inconsistent"; fixture="inconsistent.json"; exit="0"; expected="invalid_output"; code=4 },
+    @{ name="rubric-fail-approved"; fixture="rubric-fail-approved.json"; exit="0"; expected="invalid_output"; code=4 },
     @{ name="malformed"; fixture="malformed.txt"; exit="0"; expected="invalid_output"; code=4 },
     @{ name="cli-failure"; fixture="malformed.txt"; exit="7"; expected="launch_failure"; code=3 }
   )
@@ -62,7 +63,7 @@ exit /b 0
   & $snapshot -RepoRoot $repo -OutputPath $after
   if ((Get-FileHash $before).Hash -eq (Get-FileHash $after).Hash) { throw "untracked mutation was not detected" }
   Write-Host "PASS untracked-mutation"
-  Write-Host "Stress suite passed: 9/9"
+  Write-Host "Stress suite passed: 10/10"
 } finally {
   Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
 }

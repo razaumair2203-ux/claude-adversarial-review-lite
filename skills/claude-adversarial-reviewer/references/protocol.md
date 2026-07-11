@@ -22,7 +22,9 @@ Accept `success` only when Claude exits successfully, its outer JSON parses, and
 - `approved` has no findings;
 - `revise` has at least one finding;
 - `valid` contains concrete review content;
-- every reported finding is critical, high, or medium.
+- every reported finding is critical, high, or medium;
+- `approved` has no `rubric_results` entry with result `FAIL` (the runners reject this combination as `invalid_output`);
+- when a rubric was supplied, the builder additionally checks coverage: every rubric item answered exactly once, missing items treated as UNVERIFIABLE, more than half skipped means `degraded_content`, and an `approved` with zero PASS entries verified nothing and is `degraded_content`.
 
 ## Self-test
 
@@ -41,3 +43,25 @@ Accept `success` only when Claude exits successfully, its outer JSON parses, and
 ## Builder evaluation
 
 For each finding, record decision, reason, and verification. Accept only findings supported by inspected code or empirical evidence. Re-scope valid concerns whose proposed remedy is too broad. Defer valid but out-of-scope work explicitly.
+
+## Reporting
+
+This reporting procedure is shared verbatim with the sibling skill Adversarial Reviewer Lite (Claude Code builder / Codex reviewer) so both directions produce the same report regardless of which model built and which reviewed.
+
+Present findings as a readable report before any code changes. For each finding: what the reviewer found in plain language, why it matters for the user's product (concrete scenario, not theory), the builder's recommended action with reasoning (`accept`, `reject`, `re-scope`, `defer`, `needs verification`), and the verification evidence or "not yet verified". Short audits may collect decisions per finding; longer audits present all recommendations first, then a batch decision table. Batching never weakens the sign-off rule.
+
+Offer an optional self-contained HTML audit report before fixes (ask first; it may create an `audits/` folder). Required structure, identical in both skills: metadata (repo, mode, reviewer backend and model, strict on/off, timestamp), top-level status badge, scorecard, executive summary, one card per finding (reviewer claim, impact, builder recommendation, verification evidence, user decision), rubric-results table when a rubric was provided (per-item PASS/FAIL/UNVERIFIABLE with evidence and skipped items), floor-gate status when floor-gated (categories and user outcome), glossary, and an update log if fixes were applied. Never include secrets or environment dumps.
+
+End every terminal state with an operator summary containing exactly these fields:
+
+- `Final status`: approved, revise, failed, not verified, or stopped by user.
+- `What changed`: files or sections changed by the builder, or "nothing changed".
+- `Reviewer findings`: accepted, rejected, re-scoped, deferred.
+- `Verification`: commands run and results, or why not run.
+- `Floor gate`: not applicable, or `floor-gated (<categories>)` with the user's review outcome.
+- `Rubric`: not provided, or `<n> PASS / <n> FAIL / <n> UNVERIFIABLE`.
+- `Structural changes`: list or "none".
+- `Remaining risks`: concise, honest list.
+- `Next step`: one practical action for the user.
+
+State explicitly whether the user signed off on fixes; if not, say no fixes were applied.

@@ -73,5 +73,10 @@ if [[ ( "$verdict" == approved && "$count" -ne 0 ) || ( "$verdict" == revise && 
   write_error invalid_output unknown "Verdict and finding count are inconsistent."
   exit 4
 fi
+rubric_fail=$(jq '[((.structured_output // (.result | fromjson?)).rubric_results // [])[] | select(.result == "FAIL")] | length' "$stdout")
+if [[ "$verdict" == approved && "$rubric_fail" -ne 0 ]]; then
+  write_error invalid_output unknown "Verdict is approved but the rubric contains FAIL results."
+  exit 4
+fi
 mkdir -p -- "$(dirname -- "$RESULT_PATH")"
 jq '(.structured_output // (.result | fromjson?)) as $r | {result:"success", verdict:$r.verdict, review_quality:$r.review_quality, review:$r, errors:null, session_id:(.session_id // null)}' "$stdout" > "$RESULT_PATH"
