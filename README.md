@@ -1,8 +1,8 @@
-# Claude Adversarial Reviewer
+# Claude Adversarial Review - Lite (Claude AR-L)
 
-Codex builds. Claude reviews. You decide.
+**Codex builds. Claude audits.** You decide.
 
-Claude Adversarial Reviewer is a Codex skill for independent, audit-first review through Claude Code CLI. It freezes a focused review bundle, invokes Claude non-interactively with read-only permissions and schema-constrained output, detects repository mutation, and requires Codex to validate findings before fixes.
+Claude Adversarial Review - Lite is a Codex skill for independent, audit-first review through Claude Code CLI. It freezes a focused review bundle, invokes Claude non-interactively with read-only permissions and schema-constrained output, detects repository mutation, and requires Codex to validate findings before fixes.
 
 It is the reversed companion to [Adversarial Reviewer Lite](https://github.com/razaumair2203-ux/adversarial-reviewer-lite). The two are deliberately kept as mirror siblings: the same policy layer (human-review floor, rubric checklists, strict mode) and the same reporting procedure (finding evaluation, audit report, HTML report structure, terminal operator summary) — differing only in direction and transport. Here Codex builds and Claude reviews through schema-constrained JSON; there Claude Code builds and Codex reviews through a markdown verdict contract:
 
@@ -18,7 +18,7 @@ This workflow reduces correlated mistakes. It does not prove correctness or repl
 ## Workflow
 
 1. Codex builds or proposes a plan.
-2. You invoke `$claude-adversarial-reviewer`.
+2. You invoke `$claude-adversarial-review-lite`.
 3. Codex creates a focused bundle containing intent, acceptance criteria, diff/plan, relevant context, and verification.
 4. Claude reviews the frozen bundle without repository write access.
 5. The runner validates structured output and Codex checks that the repository did not change during review.
@@ -39,14 +39,14 @@ The runners find Claude through `CLAUDE_REVIEW_CLI`, `CLAUDE_BIN`, `claude` on `
 Clone and install:
 
 ```powershell
-git clone https://github.com/razaumair2203-ux/claude-adversarial-reviewer.git
-cd claude-adversarial-reviewer
+git clone https://github.com/razaumair2203-ux/claude-adversarial-review-lite.git
+cd claude-adversarial-review-lite
 .\scripts\install.ps1
 ```
 
 ```bash
-git clone https://github.com/razaumair2203-ux/claude-adversarial-reviewer.git
-cd claude-adversarial-reviewer
+git clone https://github.com/razaumair2203-ux/claude-adversarial-review-lite.git
+cd claude-adversarial-review-lite
 bash scripts/install.sh
 ```
 
@@ -55,12 +55,12 @@ Restart Codex if it is already open.
 ## Use
 
 ```text
-Use $claude-adversarial-reviewer to audit this change.
-Use $claude-adversarial-reviewer in plan mode.
-Use $claude-adversarial-reviewer for a feasibility review.
-Use $claude-adversarial-reviewer to audit this change with rubric:docs/compliance-checklist.md.
-Use $claude-adversarial-reviewer strict rubric:docs/compliance-checklist.md.
-Use $claude-adversarial-reviewer selftest.
+Use $claude-adversarial-review-lite to audit this change.
+Use $claude-adversarial-review-lite in plan mode.
+Use $claude-adversarial-review-lite for a feasibility review.
+Use $claude-adversarial-review-lite to audit this change with rubric:docs/compliance-checklist.md.
+Use $claude-adversarial-review-lite strict rubric:docs/compliance-checklist.md.
+Use $claude-adversarial-review-lite selftest.
 ```
 
 `rubric:<path>` makes the review checkable against named domain rules: the reviewer returns PASS/FAIL/UNVERIFIABLE per checklist item with evidence, and any FAIL forces `revise`. `strict` is the one-flag safe configuration for high-consequence repos: it requires a rubric, floor-gates every change for human review, and disables autonomous fixing.
@@ -68,13 +68,13 @@ Use $claude-adversarial-reviewer selftest.
 Direct dependency check:
 
 ```powershell
-.\skills\claude-adversarial-reviewer\scripts\selftest.ps1
-.\skills\claude-adversarial-reviewer\scripts\selftest.ps1 -LiveProbe
+.\skills\claude-adversarial-review-lite\scripts\selftest.ps1
+.\skills\claude-adversarial-review-lite\scripts\selftest.ps1 -LiveProbe
 ```
 
 ```bash
-bash skills/claude-adversarial-reviewer/scripts/selftest.sh
-bash skills/claude-adversarial-reviewer/scripts/selftest.sh --live-probe
+bash skills/claude-adversarial-review-lite/scripts/selftest.sh
+bash skills/claude-adversarial-review-lite/scripts/selftest.sh --live-probe
 ```
 
 Run it after non-trivial changes, auth or data work, migrations, billing changes, multi-file refactors, architecture decisions, or claims whose verification feels thin. Skip it for typo-only or cosmetic edits.
@@ -95,7 +95,7 @@ For sensitive repositories, inspect the bundle before dispatch and commit or sta
 ## Repository layout
 
 ```text
-skills/claude-adversarial-reviewer/
+skills/claude-adversarial-review-lite/
   SKILL.md
   agents/openai.yaml
   references/

@@ -3,7 +3,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $temp = Join-Path ([IO.Path]::GetTempPath()) ("claude-review-stress-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $temp | Out-Null
 $spaceRoot = Join-Path $temp "skill path with space"
-Copy-Item -LiteralPath (Join-Path $root "skills\claude-adversarial-reviewer") -Destination $spaceRoot -Recurse
+Copy-Item -LiteralPath (Join-Path $root "skills\claude-adversarial-review-lite") -Destination $spaceRoot -Recurse
 $runner = Join-Path $spaceRoot "scripts\invoke-claude-review.ps1"
 $runnerSource = Get-Content -Raw -LiteralPath $runner
 if ($runnerSource -notmatch 'mcpServers') { throw "runner must pass a structurally valid empty MCP config" }
@@ -51,7 +51,7 @@ exit /b 0
   & $runner -BundlePath $empty -ResultPath $emptyResult
   if ($LASTEXITCODE -ne 2 -or (Get-Content -Raw $emptyResult | ConvertFrom-Json).result -ne "invalid_output") { throw "empty-bundle case failed" }
   Write-Host "PASS empty-bundle"
-  $snapshot = Join-Path $root "skills\claude-adversarial-reviewer\scripts\snapshot.ps1"
+  $snapshot = Join-Path $root "skills\claude-adversarial-review-lite\scripts\snapshot.ps1"
   $repo = Join-Path $temp "repo"
   New-Item -ItemType Directory -Path $repo | Out-Null
   & git -C $repo init -q

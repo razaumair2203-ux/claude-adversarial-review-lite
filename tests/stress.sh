@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-runner="$root/skills/claude-adversarial-reviewer/scripts/invoke-claude-review.sh"
+runner="$root/skills/claude-adversarial-review-lite/scripts/invoke-claude-review.sh"
 tmp=$(mktemp -d)
 trap 'rm -rf -- "$tmp"' EXIT
 chmod +x "$root/tests/mock/claude-output" "$root/tests/mock/claude-sleep" "$root/tests/mock/claude-error" 2>/dev/null || true

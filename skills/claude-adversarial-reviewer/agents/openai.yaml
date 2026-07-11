@@ -1,4 +1,0 @@
-interface:
-  display_name: "Claude Adversarial Reviewer"
-  short_description: "Independent Claude review for Codex changes"
-  default_prompt: "Use $claude-adversarial-reviewer to audit this change before applying fixes."

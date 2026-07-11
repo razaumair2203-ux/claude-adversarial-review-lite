@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-name=claude-adversarial-reviewer
+name=claude-adversarial-review-lite
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 skills_root=${CODEX_HOME:+$CODEX_HOME/skills}
 skills_root=${skills_root:-$HOME/.codex/skills}
