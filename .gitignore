@@ -4,3 +4,6 @@ Thumbs.db
 *.log
 .stress-output/
 
+
+__pycache__/
+*.pyc

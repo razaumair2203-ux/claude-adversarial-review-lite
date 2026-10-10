@@ -13,7 +13,7 @@ List observable outcomes.
 List what must remain out of scope.
 
 ## Builder summary
-Describe what Codex changed or proposes.
+Describe what the builder changed or proposes.
 
 ## Diff or plan
 Include the focused patch or numbered plan.

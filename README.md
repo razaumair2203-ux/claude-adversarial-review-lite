@@ -1,120 +1,130 @@
-# Claude Adversarial Review - Lite (Claude AR-L)
+# claude-adversarial-review-lite
 
-**Codex builds. Claude audits.** You decide.
+**Codex builds. Claude reviews. You decide.**
 
-Claude Adversarial Review - Lite is a Codex skill for independent, audit-first review through Claude Code CLI. It freezes a focused review bundle, invokes Claude non-interactively with read-only permissions and schema-constrained output, detects repository mutation, and requires Codex to validate findings before fixes.
+This skill sends a focused review bundle to the other provider's CLI, validates
+its structured response, checks for repository mutation, and asks the builder
+to verify each finding before applying fixes. It supports changes, plans,
+feasibility, checklists, and a strict human review policy.
 
-It is the reversed companion to [Codex Adversarial Review - Lite](https://github.com/razaumair2203-ux/codex-adversarial-review-lite). The two are deliberately kept as mirror siblings: the same policy layer (human-review floor, rubric checklists, strict mode) and the same reporting procedure (finding evaluation, audit report, HTML report structure, terminal operator summary) — differing only in direction and transport. Here Codex builds and Claude reviews through schema-constrained JSON; there Claude Code builds and Codex reviews through a markdown verdict contract:
-
-- frozen bundle by default instead of reviewer repository access;
-- JSON Schema output instead of textual verdict parsing;
-- native PowerShell and POSIX runners;
-- no subagent required for dispatch;
-- explicit turn, cost, permission, and session-persistence controls;
-- critical/high/medium findings only.
-
-This workflow reduces correlated mistakes. It does not prove correctness or replace tests and human judgment.
-
-## Workflow
-
-1. Codex builds or proposes a plan.
-2. You invoke `$claude-adversarial-review-lite`.
-3. Codex creates a focused bundle containing intent, acceptance criteria, diff/plan, relevant context, and verification.
-4. Codex shows you the bundle as concise bullets before dispatch and folds in anything you want to add — refined into checkable items — so Claude only reviews the contract you approved.
-5. Claude reviews the frozen bundle without repository write access.
-6. The runner validates structured output and Codex checks that the repository did not change during review.
-7. Codex accepts, rejects, re-scopes, defers, or verifies every finding.
-8. You see the report before approving fixes.
+The [sibling skill](https://github.com/razaumair2203-ux/codex-adversarial-review-lite) reverses the
+direction. Both use the same executable protocol; their host metadata differs.
+An independent review is another source of evidence, not proof of correctness.
+When no material defect is supported, no change is needed.
 
 ## Install
 
-Prerequisites:
+You need Git, **Python 3.11+**, and both coding CLIs installed and signed in.
+No Python packages, jq, GNU timeout, or subagent setup are needed.
+See official [Python downloads](https://www.python.org/downloads/),
+[Codex setup](https://developers.openai.com/codex/cli/), and
+[Claude Code setup](https://code.claude.com/docs/en/setup).
 
-- Git
-- Codex CLI or IDE extension
-- Claude Code CLI, installed and authenticated
-- PowerShell 5.1+ on Windows, or Bash plus `jq` and `timeout` on macOS/Linux/WSL
+Check the prerequisites in a fresh terminal:
 
-The runners find Claude through `CLAUDE_REVIEW_CLI`, `CLAUDE_BIN`, `claude` on `PATH`, common local install paths, and on Windows the VS Code Claude extension's native binary.
-
-Clone and install:
-
-```powershell
-git clone https://github.com/razaumair2203-ux/claude-adversarial-review-lite.git
-cd claude-adversarial-review-lite
-.\scripts\install.ps1
+```text
+git --version
+python --version
+codex --version
+claude --version
+codex login status
+claude auth status
 ```
 
-```bash
+If needed, sign in with `codex login` or `claude auth login`.
+On macOS/Linux use `python3` where these examples say `python`.
+On Windows, enable Python's PATH option during installation; `py -3.11` also works.
+
+```text
 git clone https://github.com/razaumair2203-ux/claude-adversarial-review-lite.git
 cd claude-adversarial-review-lite
-bash scripts/install.sh
+python scripts/install.py --check
 ```
 
-Restart Codex if it is already open.
+PowerShell and Bash installers remain available: `./scripts/install.ps1 -Check`
+or `bash scripts/install.sh --check`. The installer stages a complete copy and
+preserves any previous installation under the host's `skill-backups` directory.
+It does not delete your old skill or edit your CLI login/configuration.
+`--check` performs installed local checks, with no generation call.
+
+Use the skill on your next turn; reopen Codex if it does not appear.
 
 ## Use
 
 ```text
-Use $claude-adversarial-review-lite to audit this change.
-Use $claude-adversarial-review-lite in plan mode.
-Use $claude-adversarial-review-lite for a feasibility review.
-Use $claude-adversarial-review-lite to audit this change with rubric:docs/compliance-checklist.md.
-Use $claude-adversarial-review-lite strict rubric:docs/compliance-checklist.md.
-Use $claude-adversarial-review-lite selftest.
+$claude-adversarial-review-lite selftest
+$claude-adversarial-review-lite selftest live-probe
+$claude-adversarial-review-lite audit
+$claude-adversarial-review-lite plan
+$claude-adversarial-review-lite audit test-spec:docs/change-tests.md
+$claude-adversarial-review-lite audit rubric:docs/checklist.md
+$claude-adversarial-review-lite audit strict rubric:docs/checklist.md
 ```
 
-`rubric:<path>` makes the review checkable against named domain rules: the reviewer returns PASS/FAIL/UNVERIFIABLE per checklist item with evidence, and any FAIL forces `revise`. `strict` is the one-flag safe configuration for high-consequence repos: it requires a rubric, floor-gates every change for human review, and disables autonomous fixing.
+`selftest` checks local discovery, authentication, temp paths, and the installed
+parser. It does **not** prove the remote reviewer ran. `live-probe` makes one
+synthetic review call without project content; account usage may apply. Its
+result is the evidence that live dispatch works.
 
-Direct dependency check:
+Model selection defaults to this CLI's account default. There is no fixed
+model/version chain. You can specify `reviewer:<model-or-provider-alias>`,
+`fallback:<model>`, and `reasoning:<level>` deliberately. A fallback is used only
+for an availability error and is reported. Codex custom providers keep their
+configured endpoint/model; `reviewer:configured` explicitly selects the top-level
+Codex model and `reviewer:cli-default` skips that model setting. No account-wide
+model preference is changed. Newer models alone do not establish better review
+quality; measure defect detection, unsupported findings, latency, and cost.
 
-```powershell
-.\skills\claude-adversarial-review-lite\scripts\selftest.ps1
-.\skills\claude-adversarial-review-lite\scripts\selftest.ps1 -LiveProbe
-```
+## What you should see
 
-```bash
-bash skills/claude-adversarial-review-lite/scripts/selftest.sh
-bash skills/claude-adversarial-review-lite/scripts/selftest.sh --live-probe
-```
+The builder states the review scope, creates a frozen bundle, and launches the
+runner directly. The runner reports its selected CLI/model, writes `running`,
+prints progress every 15 seconds, and produces a terminal result. You then see
+the review and the builder's evidence-backed decisions on each finding.
 
-Run it after non-trivial changes, auth or data work, migrations, billing changes, multi-file refactors, architecture decisions, or claims whose verification feels thin. Skip it for typo-only or cosmetic edits.
+A missing executable, unsupported model, auth problem, timeout, invalid response,
+or changed repository is an explicit failure/not-verified result. Logs and attempt
+metadata remain available at the reported diagnostic path. A successful launch
+or local self-test is never reported as a completed audit.
 
-## Safety and privacy
+Rubrics receive PASS/FAIL/UNVERIFIABLE results with exact item coverage. Strict
+mode requires a rubric and human sign-off after findings. Auth, billing,
+destructive data, secrets, and regulatory changes retain a human-review floor.
+Explicit authorization already supplied by the user is respected; ordinary
+review dispatch does not add repeated confirmation prompts.
 
-- The default reviewer starts in an empty temp directory with built-in tools, slash commands, hooks, filesystem setting sources, and MCP servers disabled; it receives only the bundle Codex constructs.
-- Ignored files, secrets, tokens, and full environment dumps must never enter the bundle.
-- Repository text is treated as untrusted evidence, not reviewer instructions.
-- Claude runs with `dontAsk`; unapproved operations fail instead of prompting invisibly.
-- Pre/post snapshots include Git state and hashes of dirty tracked files.
-- Neither Claude nor Codex is automatically trusted.
-- No fix is applied until reviewer findings are independently assessed and the user signs off, unless autonomous fixing was explicitly requested (strict mode voids that authorization).
-- An `approved` verdict on auth, billing, migration/destructive-data, secret, or regulatory changes is floor-gated: you review the diff yourself before the audit completes. Tag repo-specific floor paths in a `.advreview-floor` file (one regex per line) at the repo root.
+## Upgrade and troubleshooting
 
-For sensitive repositories, inspect the bundle before dispatch and commit or stash unrelated work first.
+[How to use](docs/how-to-use.md), [troubleshooting](docs/troubleshooting.md),
+[evidence and upgrade decisions](docs/upgrade-plan.md), and
+[the executable protocol](skills/claude-adversarial-review-lite/references/runner.md).
 
-## Repository layout
+Protocol 2 adds Python and structured output in both directions. Legacy shell
+orchestration, textual verdict parsing, mandatory transport subagents, and
+automatic full-access sandbox fallback are replaced. Positional shell runner
+model arguments and PowerShell bundle/result/model parameters remain supported;
+use the documented named flags for other settings.
+
+## Privacy and limits
+
+Only selected bundle content is intentionally sent to the external reviewer.
+Claude has no tools; Codex runs read-only in a temp directory with automation
+configuration isolated. Read-only sandboxing is not a no-read security boundary,
+and snapshots are detection, not an OS guarantee. For stronger isolation, use an
+externally isolated environment. No runner silently bypasses permissions.
+
+Local logs include the frozen bundle and may contain source; do not publish
+them without inspection. Schema-valid findings can be wrong. The builder must
+verify them, and review cannot replace tests or human judgment.
+
+## Maintainer checks
 
 ```text
-skills/claude-adversarial-review-lite/
-  SKILL.md
-  agents/openai.yaml
-  references/
-  scripts/
-scripts/
-tests/
+python -m unittest discover -s tests -v
 ```
 
-The skill is the workflow. The runner scripts are deterministic transport and validation. The reviewer prompt and schema are separate resources so they can evolve without bloating the skill instructions.
+Offline CI covers Windows, Linux, and macOS on Python 3.11/3.13. Live provider
+checks remain opt-in and use no repository content. Keep shared transport,
+schema, prompt, and regression fixes mirrored in the sibling repository.
 
-## Limits
-
-- Claude Code CLI is a separate product with its own authentication, usage, and model availability.
-- Schema-valid output can still contain incorrect findings.
-- Frozen bundles can omit relevant context; the runner surfaces insufficient context as degraded review quality.
-- Snapshot checks detect project mutation but are not an operating-system security boundary.
-- Whole-codebase review is intentionally opt-in because it increases privacy and prompt-injection exposure.
-
-## License
-
-MIT
+MIT license.

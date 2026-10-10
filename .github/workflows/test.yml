@@ -1,32 +1,22 @@
-name: test
-
+name: Offline regression tests
 on:
   push:
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
-  windows:
-    runs-on: windows-latest
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Stress test PowerShell runner
-        shell: powershell
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\stress.ps1
-
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check shell syntax
-        run: |
-          bash -n skills/claude-adversarial-review-lite/scripts/invoke-claude-review.sh
-          bash -n skills/claude-adversarial-review-lite/scripts/snapshot.sh
-          bash -n scripts/install.sh
-          bash -n tests/stress.sh
-      - name: Stress test POSIX runner
-        run: |
-          chmod +x tests/mock/claude-output tests/mock/claude-sleep tests/mock/claude-error
-          bash tests/stress.sh
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -v
