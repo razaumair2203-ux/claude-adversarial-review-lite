@@ -13,7 +13,7 @@ List observable outcomes.
 List what must remain out of scope.
 
 ## Builder summary
-Describe what Codex changed or proposes.
+Describe what the builder changed or proposes.
 
 ## Diff or plan
 Include the focused patch or numbered plan.
@@ -29,4 +29,3 @@ Optional. When the user passed `rubric:<path>`, include the domain checklist ver
 
 ## Known constraints and uncertainties
 List platform, compatibility, dependency, migration, and unresolved assumptions.
-
