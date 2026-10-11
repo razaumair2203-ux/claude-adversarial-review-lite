@@ -1,3 +1,29 @@
+# User-chosen, verified reviewer model and effort (2026-10-11)
+
+- Ask for model/effort choice when the invocation/session or local preference
+  has not supplied it. Offer known pair, advertised choices, or optional
+  strongest/highest selection; no silent public model default.
+- Save optional reviewer-only local preferences outside installed/public skill
+  files. Explicit choices win; verify them before sending project content.
+- Query Codex app-server model/list and Claude's streaming model picker;
+  select the newest compatible already-installed CLI unless explicitly overridden.
+- Capability-family/version ranking without fixed release IDs; unknown capability
+  order fails visibly. Catalog entries alone are never treated as entitlements.
+- Bounded, availability-only model/effort probes. Other failures stop without
+  silent downgrade. Explicit pins and custom provider configuration remain supported.
+- Record model, effort, CLI, selection provenance, probe results, and diagnostics.
+  Document opt-out, latency/usage implications, and gateway uncertainty.
+- 58 behavioral regressions in each package. Actual automatic-mode controls selected
+  Claude Fable 5.1/max and GPT-6 Astra/ultra, found a seeded defect, and approved
+  a correct change. Fresh Claude slash-command sessions invoked Codex in both
+  controls; all fixture snapshots and fingerprints stayed unchanged.
+- Explicit-choice controls also verified Opus 5.5/max and GPT-6.1 Sol/ultra.
+  A fresh Claude choice-flow session listed advertised options, asked for a pair,
+  returned selection_needed, and dispatched no reviewer generation.
+- Account for selection overhead in host wait budgets. Use tracked task/session
+  completion for long reviews; an observed broad-review timeout remained a
+  non-approval with retained diagnostics and verified process-tree cancellation.
+
 # Protocol 2 reliability upgrade (2026-10-10)
 
 - Executable, mirrored CLI transport with persistent status/results, heartbeats,
